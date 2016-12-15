@@ -1,0 +1,7 @@
+# Quick overview
+
+./tf (helper script wrapper for 'terraform')
+
+root-account-email@example.com=123456789012/
+- account-specific resources are placed within an AWS account directory.
+- directory names the root account email and the 12-digit AWS account number.

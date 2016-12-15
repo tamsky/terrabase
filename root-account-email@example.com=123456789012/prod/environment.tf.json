@@ -1,0 +1,39 @@
+{
+    "provider": {
+        "aws": {
+            "region": "us-west-2"
+        }
+    },
+
+    "variable": {
+        "aws_credentials_profile_name": {
+            "default": "example",
+            "description": "(required) references credentail groups in ~/.aws/credentials; used by our Makefiles, boto and aws cli."
+        },
+        "environment": {
+            "default": "prod",
+            "description": "(required) used throughout to segregate remote storage and pick setting from map variables"
+        },
+        "vpc_dns_zone_name": {
+            "default": "example.com",
+            "description": "(required) dns zone name associated with vpc_dns_zone_id"
+        },
+        "vpc_dns_zone_id": {
+            "default": "Z01234567890DS",
+            "comment": "Z01234567890DS = prod.example.com",
+            "description": "(required) route53 zone id where [01].nat.${vpc_dns_zone_name} A records get created."
+        },
+        "tf_remote_state_s3_storage_bucket": {
+            "default": "example-terraform",
+            "description": "terraform remote s3 backend bucket name"
+        },
+        "tf_remote_state_s3_storage_region": {
+            "default": "us-west-2",
+            "description": "terraform remote s3 storage region"
+        },
+        "date": {
+        },
+        "username": {
+        }
+    }
+}

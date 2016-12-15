@@ -1,0 +1,129 @@
+#cloud-config
+
+preserve_hostname: false
+fqdn: ${instance}.elasticsearch.prod.example.com
+
+# Upgrade the instance on first boot
+# (ie run apt-get upgrade || yum upgrade)
+#
+# Default: false
+# Aliases: apt_upgrade
+package_upgrade: true
+
+# Install additional packages on first boot
+#
+# Default: none
+#
+# if packages are specified, this apt_update will be set to true
+#
+# packages may be supplied as a single package name or as a list
+# with the format [<package>, <version>] wherein the specifc
+# package version will be installed.
+packages:
+  - ntop
+  - ngrep
+  - tcpdump
+  - htop
+  - mlocate
+  - wget
+  - curl
+  - sysstat
+  - telnet
+  - emacs-nox
+  - java-1.8.0
+
+ntp:
+  pools:
+    - 0.amazon.pool.ntp.org
+    - 1.amazon.pool.ntp.org
+    - 2.amazon.pool.ntp.org
+    - 3.amazon.pool.ntp.org
+
+users:
+  - default
+  - name: exampleuser
+    groups: admin,docker,sudo
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    ssh-authorized-keys:
+      - ssh-rsa ........ user-comment
+
+  - name: ec2-user
+    groups: admin,docker,sudo
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    ssh-authorized-keys:
+      - ssh-rsa ........ ec2-root-key-comment
+
+
+#
+# RUNCMD only runs during the first boot
+#
+runcmd:
+  - set -x
+  # Fragile: relies on the AMI having java-1.7.0 installed
+  - /usr/sbin/alternatives --set java /usr/lib/jvm/jre-1.8.0-openjdk.x86_64/bin/java && yum -y remove java-1.7.0
+  - rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch
+  - |
+    cat > /tmp/elasticsearch-gpg-key <<EOF
+    -----BEGIN PGP PUBLIC KEY BLOCK-----
+    Version: rpm-4.8.0 (NSS-3)
+
+    mQENBFI3HsoBCADXDtbNJnxbPqB1vDNtCsqhe49vFYsZN9IOZsZXgp7aHjh6CJBD
+    A+bGFOwyhbd7at35jQjWAw1O3cfYsKAmFy+Ar3LHCMkV3oZspJACTIgCrwnkic/9
+    CUliQe324qvObU2QRtP4Fl0zWcfb/S8UYzWXWIFuJqMvE9MaRY1bwUBvzoqavLGZ
+    j3SF1SPO+TB5QrHkrQHBsmX+Jda6d4Ylt8/t6CvMwgQNlrlzIO9WT+YN6zS+sqHd
+    1YK/aY5qhoLNhp9G/HxhcSVCkLq8SStj1ZZ1S9juBPoXV1ZWNbxFNGwOh/NYGldD
+    2kmBf3YgCqeLzHahsAEpvAm8TBa7Q9W21C8vABEBAAG0RUVsYXN0aWNzZWFyY2gg
+    KEVsYXN0aWNzZWFyY2ggU2lnbmluZyBLZXkpIDxkZXZfb3BzQGVsYXN0aWNzZWFy
+    Y2gub3JnPokBOAQTAQIAIgUCUjceygIbAwYLCQgHAwIGFQgCCQoLBBYCAwECHgEC
+    F4AACgkQ0n1mbNiOQrRzjAgAlTUQ1mgo3nK6BGXbj4XAJvuZDG0HILiUt+pPnz75
+    nsf0NWhqR4yGFlmpuctgCmTD+HzYtV9fp9qW/bwVuJCNtKXk3sdzYABY+Yl0Cez/
+    7C2GuGCOlbn0luCNT9BxJnh4mC9h/cKI3y5jvZ7wavwe41teqG14V+EoFSn3NPKm
+    TxcDTFrV7SmVPxCBcQze00cJhprKxkuZMPPVqpBS+JfDQtzUQD/LSFfhHj9eD+Xe
+    8d7sw+XvxB2aN4gnTlRzjL1nTRp0h2/IOGkqYfIG9rWmSLNlxhB2t+c0RsjdGM4/
+    eRlPWylFbVMc5pmDpItrkWSnzBfkmXL3vO2X3WvwmSFiQbkBDQRSNx7KAQgA5JUl
+    zcMW5/cuyZR8alSacKqhSbvoSqqbzHKcUQZmlzNMKGTABFG1yRx9r+wa/fvqP6OT
+    RzRDvVS/cycws8YX7Ddum7x8uI95b9ye1/Xy5noPEm8cD+hplnpU+PBQZJ5XJ2I+
+    1l9Nixx47wPGXeClLqcdn0ayd+v+Rwf3/XUJrvccG2YZUiQ4jWZkoxsA07xx7Bj+
+    Lt8/FKG7sHRFvePFU0ZS6JFx9GJqjSBbHRRkam+4emW3uWgVfZxuwcUCn1ayNgRt
+    KiFv9jQrg2TIWEvzYx9tywTCxc+FFMWAlbCzi+m4WD+QUWWfDQ009U/WM0ks0Kww
+    EwSk/UDuToxGnKU2dQARAQABiQEfBBgBAgAJBQJSNx7KAhsMAAoJENJ9ZmzYjkK0
+    c3MIAIE9hAR20mqJWLcsxLtrRs6uNF1VrpB+4n/55QU7oxA1iVBO6IFu4qgsF12J
+    TavnJ5MLaETlggXY+zDef9syTPXoQctpzcaNVDmedwo1SiL03uMoblOvWpMR/Y0j
+    6rm7IgrMWUDXDPvoPGjMl2q1iTeyHkMZEyUJ8SKsaHh4jV9wp9KmC8C+9CwMukL7
+    vM5w8cgvJoAwsp3Fn59AxWthN3XJYcnMfStkIuWgR7U2r+a210W6vnUxU4oN0PmM
+    cursYPyeV0NX/KQeUeNMwGTFB6QHS/anRaGQewijkrYYoTNtfllxIu9XYmiBERQ/
+    qPDlGRlOgVTd9xUfHFkzB52c70E=
+    =92oX
+    -----END PGP PUBLIC KEY BLOCK-----
+    EOF
+  - rpm --import /tmp/elasticsearch-gpg-key
+
+  # Install packages/plugins
+  - rpm -ivh https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-1.7.5.noarch.rpm
+  - /usr/share/elasticsearch/bin/plugin --install lmenezes/elasticsearch-kopf/1.0
+  - /usr/share/elasticsearch/bin/plugin --install elasticsearch/elasticsearch-cloud-aws/2.7.1
+  - /usr/share/elasticsearch/bin/plugin --install elasticsearch/marvel/latest
+  # Configure
+  - |
+    cat >> /etc/elasticsearch/elasticsearch.yml << EOF
+
+    # TODO: provide storage path as a param
+    # path.data = /path/to/data1, /path/to/data2
+    cluster.name: ${cluster_name}
+    network.host: _ec2:privateIpv4_
+    network.bind_host: 0.0.0.0
+    marvel.agent.exporter.es.hosts: ["127.0.0.1:9200"]
+    cloud.aws.region: us-east-1
+    cloud.node.auto_attributes: true  # This sets node.aws_availability_zone
+    discovery:
+      type: ec2
+    discovery.ec2.tag.environment: prod
+    discovery.ec2.tag.role: elasticsearch
+
+    mandatory : marvel,cloud-aws
+    EOF
+
+  # Start:
+  - chkconfig --add elasticsearch
+  - service elasticsearch start
+  - echo $0 -- cloud-init runcmd is done.
