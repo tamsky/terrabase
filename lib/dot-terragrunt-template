@@ -1,0 +1,3 @@
+include = {
+  path = "__PREFIX__.terragrunt-include"
+}
