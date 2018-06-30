@@ -1,0 +1,48 @@
+{
+    "provider": [
+        {
+            "aws": {
+                "region": "${var.aws_provider_region}",
+                "profile": "${var.aws_provider_profile_name}",
+                "version": "~> 1.6"
+            },
+            "template": {
+                "version": "~> 1.0"
+            }
+        }
+    ],
+
+    "terraform": {            
+        "backend": {
+            "s3": {
+            }
+        }
+    },
+
+    "variable": {
+        "arn_aws": {
+            "default": "arn:aws",
+            "description": "In all other regions, ARNs begin with arn:aws, but in AWS GovCloud (US) Region, ARNs begin with arn:aws-us-gov"
+        },
+        "aws_provider_region": {
+            "default": "us-west-2",
+            "description": "region passed to provider.aws.region"
+        },
+        "aws_provider_profile_name": {
+            "default": "example-dot-com-root",
+            "description": "profile passed to provider.aws.profile"
+        },
+        "environment": {
+            "default": "global",
+            "description": "(required) used throughout to segregate remote storage and pick setting from map variables"
+        },
+        "tf_remote_state_s3_bucket_global_region": {
+            "default": "us-west-2",
+            "description": "region where ${tf_remote_state_s3_bucket_prefix}-<ACCT_ID>-global bucket resides"
+        },
+        "tf_remote_state_s3_bucket_global_profile_name": {
+            "default": "example-dot-com-root",
+            "description": "(required) profile name (in ~/.aws/credentials) used to access global bucket."
+        }
+    }
+}
