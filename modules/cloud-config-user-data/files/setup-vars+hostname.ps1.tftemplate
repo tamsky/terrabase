@@ -1,0 +1,54 @@
+<powershell>
+# THIS FILE MANAGED BY TERRAFORM
+
+# This file uses terraform's template syntax.
+#   https://www.terraform.io/docs/providers/template/d/file.html#template-syntax
+# Note: bash ($) usage must be escaped as ($$).
+
+# Naming conventions for this file:
+#   lower-case varnames = terraform vars
+#   UPPER-CASE varnames = bash runtime variables
+#   $ + {lower} = dereference terraform template var: lower
+#  $$ + {UPPPER} = $UPPER = dereference bash runtime variable: UPPER
+
+Set-DnsClientServerAddress -InterfaceAlias Ethernet -ServerAddress "169.254.169.253"
+
+$APP="${name}"
+$ENV="${environment}"   # expect {dev/stg/prd} value here
+
+$AWS_IDENTITY=(Invoke-RestMethod -uri 'http://169.254.169.254/latest/dynamic/instance-identity/document')
+$INSTANCE_ID=$AWS_IDENTITY.instanceId.ToString()
+$AMI_ID=$AWS_IDENTITY.imageId.ToString()
+$INSTANCE_REGION=$AWS_IDENTITY.region.ToString()
+
+# Suffix is the last 5 digits of instance_id
+$SUFFIX=$INSTANCE_ID.Substring($INSTANCE_ID.Length - 5)
+# This is the host name
+$HOSTNAME="$ENV-$APP-$SUFFIX"
+
+# NetBios Naming doesn't support more than 15 characters, truncate
+if ($HOSTNAME -gt 15) {
+  $HOSTNAME=$HOSTNAME.Substring(0,15)
+}
+Rename-Computer -NewName $HOSTNAME
+
+# Set newrelic labels
+$LABELS='ENVIRONMENT:${environment};INSTANCE_REGION:' + $INSTANCE_REGION + ';APP:${name}'
+cmd.exe /c net stop nrsvrmon
+Set-ItemProperty -Path 'HKLM:\Software\New Relic\Server Monitor' -Name 'Labels' -Value $LABELS
+cmd.exe /c net start nrsvrmon
+
+# Disable winrm
+cmd.exe /c netsh advfirewall firewall set rule name="WinRM-HTTPS" new action=block
+cmd.exe /c net stop winrm
+cmd.exe /c sc config winrm start=disabled
+
+$PAYLOAD='payload={"text": "Host in ${environment}-${name} autoscale group booted with (' + $AMI_ID + ')."}'
+Invoke-WebRequest `
+    -usebasicparsing `
+    -method POST `
+    -body $PAYLOAD `
+    -uri "${slack_hook_url}"
+
+Restart-Computer
+</powershell>

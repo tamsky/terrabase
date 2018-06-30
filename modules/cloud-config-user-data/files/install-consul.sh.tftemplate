@@ -1,0 +1,111 @@
+#!/bin/bash
+
+# THIS FILE MANAGED BY TERRAFORM
+
+set -x
+
+cd /usr/local/bin
+wget -q https://releases.hashicorp.com/consul/0.8.3/consul_0.8.3_linux_amd64.zip
+
+echo "f894383eee730fcb2c5936748cc019d83b220321efd0e790dae9a3266f5d443a  consul_0.8.3_linux_amd64.zip" \
+     > consul_0.8.3_linux_amd64.zip.sha256
+
+sha256sum --check consul_0.8.3_linux_amd64.zip.sha256
+
+echo Installing Consul...
+
+[[ $(type -p jq) ]] || { apt install -y jq || yum install -y jq ; }
+[[ $(type -p unzip) ]] || { apt install -y unzip || yum install -y unzip ; }
+unzip consul_0.8.3_linux_amd64.zip
+chmod +x consul
+
+rm consul_0.8.3_linux_amd64.zip
+rm consul_0.8.3_linux_amd64.zip.sha256
+
+mkdir -p /etc/consul.d/
+
+mkdir /var/consul
+chown consul:consul /var/consul
+
+cat >/etc/consul.d/leave_on_terminate.json <<EOF
+{
+    "leave_on_terminate": true
+}
+EOF
+
+
+cat >/etc/consul.d/disable_remote_update_checks.json <<EOF
+{
+    "disable_update_check": true,
+    "disable_anonymous_signature": true
+}
+EOF
+
+cat >/etc/consul.d/recursor.json <<EOF
+{
+    "recursor": "169.254.169.253"
+}
+EOF
+
+cat >/etc/consul.d/node_exporter.json <<EOF
+{
+    "service": {
+        "name": "node_exporter",
+        "address": "$IP",
+        "port": 10000,
+        "tags": [ "prometheus_metrics" ]
+    }
+}
+EOF
+
+
+if [[ "${this_is_a_consul_master_node}" == "true" ]] ; then
+    # A few variables we will refer to later...
+    INTERNAL_IP=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
+    INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
+    SHORT_INSTANCE_ID=$${INSTANCE_ID:$${#INSTANCE_ID}-5:$${#INSTANCE_ID}}
+    INSTANCE_REGION=$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone)
+    INSTANCE_REGION=$${INSTANCE_REGION:0:$${#INSTANCE_REGION}-1}
+
+    TRY=0
+    while [[ $TRY -lt 5 ]]  ; do
+        ASG_NAME_JSON=$(
+                aws ec2 describe-instances \
+                    --region=$INSTANCE_REGION \
+                    --query="Reservations[].Instances[].[Tags]" \
+                    --output="json" \
+                    --instance-ids="$INSTANCE_ID"
+                    )
+        # Check if we have an answer yet:
+        [[ $ASG_NAME_JSON ]] && break
+        TRY=$(( TRY + 1 ))
+        sleep 10
+    done
+    ASG_NAME=$(echo $ASG_NAME_JSON |
+                   jq '.[][]|from_entries|."aws:autoscaling:groupName"' --raw-output )
+    [[ $ASG_NAME ]] || { echo Could not find valid ASG_NAME within: $ASG_NAME_JSON ... aborting. ; exit 1 ; }
+
+    # remove any CLIENT flags
+    cat > /etc/default/consul <<EOF
+CONSUL_FLAGS_FOR_CLIENT=""
+CONSUL_FLAGS_FOR_SERVER="-server
+ -node=consul-master-$SHORT_INSTANCE_ID
+ -retry-join-ec2-tag-key aws:autoscaling:groupName
+ -retry-join-ec2-tag-value $ASG_NAME
+ -bootstrap-expect=${expected_master_node_count}"
+EOF
+
+    # View our work:
+    grep -n . /etc/default/consul
+
+fi
+
+/etc/init.d/consul start
+
+# Consul should leave cleanly on poweroff/reboot:
+ln -s ../init.d/consul /etc/rc0.d/K01consul
+ln -s ../init.d/consul /etc/rc1.d/K01consul
+ln -s ../init.d/consul /etc/rc3.d/S99consul
+ln -s ../init.d/consul /etc/rc6.d/K01consul
+ln -s /etc/init.d/consul /lib/systemd/system-shutdown/
+exit 0

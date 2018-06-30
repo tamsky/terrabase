@@ -1,0 +1,120 @@
+#!/bin/bash
+# THIS FILE MANAGED BY TERRAFORM
+
+# This file uses terraform's template syntax.
+#   https://www.terraform.io/docs/providers/template/d/file.html#template-syntax
+# Note: bash ($) usage must be escaped as ($$).
+
+# Naming conventions for this file:
+#   lower-case varnames = terraform vars
+#   UPPER-CASE varnames = bash runtime variables
+#   $ + {lower} = dereference terraform template var: lower
+#  $$ + {UPPPER} = $UPPER = dereference bash runtime variable: UPPER
+
+set -x
+
+###### Early boot actions
+
+# This task should move to packer-base image:
+# Creating the directory before boot allows journald to persist logs.
+# Creating the directory after binary starts does not.
+# Restart journald now so we persist logs:
+mkdir -v /var/log/journal &&
+     [[ $(type systemctl) ]] &&
+     systemctl restart systemd-journald.service
+
+# Uncomment if cloud-init modifies /etc/rsyslog.conf
+# service rsyslog restart
+
+# Fix DNS:
+# Ubuntu needs this:
+# http://serverfault.com/questions/737375
+[[ -f /etc/resolvconf/update.d/libc ]] && {
+    cat >/etc/default/resolvconf <<EOF
+TRUNCATE_NAMESERVER_LIST_AFTER_LOOPBACK_ADDRESS=n
+EOF
+    resolvconf -u ;
+}
+
+
+###### Begin Hostname config:
+
+APP="${name}"
+ENV="${environment}"   # expect {dev/stg/prd} value here
+
+AMI_ID=$(curl -s http://169.254.169.254/latest/meta-data/ami-id)
+INTERNAL_IP=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
+INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
+INSTANCE_REGION=$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone)
+INSTANCE_REGION=$${INSTANCE_REGION:0:$${#INSTANCE_REGION}-1}  # remove last character (remove AZ)
+
+# Suffix was once the last 5 digits of INSTANCE_ID:
+# SUFFIX=$(echo $INSTANCE_ID | sed 's/^.*\(.\{5\}\)$/\1/')
+SUFFIX="$${INSTANCE_ID}"
+# This is the host name
+HOSTNAME="$${ENV}-$${APP}--$${AMI_ID}--$${SUFFIX}"
+
+# Get Account ID
+AWS_STS_ACCOUNT_ID=$(aws sts get-caller-identity --region=$INSTANCE_REGION | jq -r .Account)
+
+# EXPORT EC2_TAGS to a shell script
+# Tag Names might contain characters illegal in shell vars (example ':',' ')
+# Illegal chars are converted to '_' underscore.
+aws ec2 describe-instances \
+ --region=$INSTANCE_REGION \
+ --query="Reservations[].Instances[].[Tags]" \
+ --output="json" \
+ --instance-ids="$INSTANCE_ID" |
+    jq '.[][][]|@text "ec2_tag_\(.Key)=\"\(.Value)\""' --raw-output |
+    awk -F= '{ print "declare -- " gensub("[^A-Za-z_0-9]","_","g",$1) "=" $2 }' \
+         > /var/local/terrabase.sh
+
+# Export the other variables above as well:
+(
+    declare -p APP
+    declare -p ENV
+    declare -p AMI_ID
+    declare -p INTERNAL_IP
+    declare -p INSTANCE_ID
+    declare -p INSTANCE_REGION
+    declare -p AWS_STS_ACCOUNT_ID
+) >> /var/local/terrabase.sh
+
+# bring ec2 tags into environment
+source /var/local/terrabase.sh
+
+# if set, prefer fqdn:
+HOSTNAME=$${ec2_tag_fqdn:-$HOSTNAME}
+
+# Set host name if not yet set:
+grep compute.internal /proc/sys/kernel/hostname || {
+  echo Setting hostname to $HOSTNAME ;
+  echo $HOSTNAME | cut -c1-63 > /etc/hostname ;
+  hostname -F /etc/hostname ;
+  echo $INTERNAL_IP $HOSTNAME >> /etc/hosts ;
+}
+
+## DEPLOYMENT_BUCKET_NAME="$${AWS_STS_ACCOUNT_ID}-terrabase-global"
+## 
+## # copy static files
+## aws s3 cp --region $INSTANCE_REGION \
+##     s3://$DEPLOYMENT_BUCKET_NAME/cloud-init/etc-init.d-consul.sh \
+##     /etc/init.d/consul
+## chmod 755 /etc/init.d/consul
+## 
+## aws s3 cp --region $INSTANCE_REGION \
+##     s3://$DEPLOYMENT_BUCKET_NAME/cloud-init/aws-prompt.sh \
+##     /etc/profile.d/aws-prompt.sh
+## chmod 755 /etc/profile.d/aws-prompt.sh
+## 
+## # This handles an ubuntuism which kills our PS1 if TERM=*-256color
+## echo "
+## source /etc/profile.d/aws-prompt.sh" | tee -a /etc/skel/.bash_aliases | tee -a /home/ec2-user/.bash_aliases
+
+# cloud-init, by default, mounts block device ephemeral0 on /mnt
+#
+# consider if you need tochown it after mount:
+# chown user:group /mnt
+
+# Cloud-init wants us to exit cleanly:
+exit 0

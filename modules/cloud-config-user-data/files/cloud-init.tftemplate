@@ -1,0 +1,26 @@
+#cloud-config
+
+package_update: false
+package_upgrade: false
+
+# trust me:
+migrate: false
+
+${MAYBE_SOME_FQDN_CLOUD_CONFIG_YAML}
+
+ntp:
+  pools:
+    - 0.amazon.pool.ntp.org
+    - 1.amazon.pool.ntp.org
+    - 2.amazon.pool.ntp.org
+    - 3.amazon.pool.ntp.org
+
+system_info:
+  default_user:
+    name: ec2-user
+
+users:
+- default
+- name: consul
+  system: true
+${MAYBE_MORE_CLOUD_CONFIG_USERS}
