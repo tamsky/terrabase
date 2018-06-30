@@ -1,0 +1,2 @@
+# Since we do not use aws-blueprints for our global terraform configs,
+# this file can remain empty.

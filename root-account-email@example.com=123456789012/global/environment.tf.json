@@ -9,14 +9,6 @@
             "template": {
                 "version": "~> 1.0"
             }
-        },
-        {
-            "aws": {
-                "alias": "route53",
-                "region": "${var.vpc_region}",
-                "profile": "${var.aws_provider_profile_name}",
-                "version": "~> 1.6"
-            }
         }
     ],
 
@@ -36,33 +28,13 @@
             "default": "us-west-2",
             "description": "region passed to provider.aws.region"
         },
-        "vpc_region": {
-            "default": "us-west-2",
-            "description": "(required) This is the region where the VPC will be created and managed."
-        },
         "aws_provider_profile_name": {
             "default": "example-dot-com-root",
             "description": "profile passed to provider.aws.profile"
         },
         "environment": {
-            "default": "prod",
+            "default": "global",
             "description": "(required) used throughout to segregate remote storage and pick setting from map variables"
-        },
-        "vpc_dns_zone_name": {
-            "default": "example.com",
-            "description": "(required) dns zone name associated with vpc_dns_zone_id"
-        },
-        "vpc_dns_zone_id": {
-            "default": "Z01234567890DS",
-            "description": "(required) route53 zone id where [01].nat.${vpc_dns_zone_name} A records get created."
-        },
-        "vpc_name": {
-            "default": "prod-vpc",
-            "description": "(required) The name associated with the VPC-id in the AWS web console."
-        },
-        "vpc_default_ssh_key_name": {
-            "default": "default-ssh-key",
-            "description": "(required) default key_name prefix for ec2 root access. Add '-${var.environment}' suffix when referencing. See core/key-pairs/ directory."
         },
         "tf_remote_state_s3_bucket_global_region": {
             "default": "us-west-2",

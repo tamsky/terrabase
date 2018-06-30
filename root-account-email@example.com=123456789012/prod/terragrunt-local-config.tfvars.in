@@ -1,0 +1,8 @@
+# This file contains a fragment of a config.
+
+    terraform {
+        # Deploy from local checkout
+        source = "${get_env("PWD","ERROR")}/${get_env("UPSTREAM_ROOT_PREFIX","ERROR")}../..//aws-blueprints/${path_relative_to_include()}"
+    }
+
+}  # terragrunt: close

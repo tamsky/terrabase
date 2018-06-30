@@ -1,0 +1,9 @@
+# This file contains a fragment of a config.
+
+terraform {
+    # Deploy from github repo, 'master' branch:
+    source = "git::git@github.com:openmail/terraform//aws-blueprints/${path_relative_to_include()}?ref=master"
+
+}
+
+}  # terragrunt: close

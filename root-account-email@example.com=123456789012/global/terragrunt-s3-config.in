@@ -1,0 +1,18 @@
+terragrunt {
+  remote_state = {
+    backend = "s3"
+    config {
+      # when using IAM_PROFILEs, this may be blank:
+      profile = "${get_env("AWS_PROFILE","")}"
+
+      # '+++' yields an invalid bucket name (in all regions)
+      bucket = "${get_env("AWS_ACCOUNT_ID","+++")}-tfstate-global"
+      key = "${path_relative_to_include()}/terraform.tfstate"
+      region = "us-west-2"   # Oregon is the bestest and closest region (for us).
+                             # This must match <env>/environment.tf.json:tf_remote_state_s3_bucket_region_global
+      encrypt = true
+
+      dynamodb_table = "terraform-locks"
+    }
+  }
+}

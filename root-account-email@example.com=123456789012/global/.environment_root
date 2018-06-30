@@ -1,0 +1,2 @@
+# Do not remove this file, it is used by environment.sh-and-enable-remote-state.makefile
+# to dynamically find the base of the terraform directory tree for an environment.
