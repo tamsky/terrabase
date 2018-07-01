@@ -9,7 +9,9 @@ UPSTREAM_ROOT_PREFIX := $(shell FILE=.environment_root ; for i in . .. ../.. ../
 environment.sh: $(UPSTREAM_ENVIRONMENT_TF_JSON) $(lastword $(MAKEFILE_LIST)) ## Build a .sh file that declares these values from the .json
 	@/bin/echo -n Generating local ./environment.sh file
 	@rm -f $@
+        # known consumers of ENVIRONMENT: <env>/terragrunt-s3-config.in
 	@echo export ENVIRONMENT=$$(jq -r '.["variable"]["environment"]["default"] // empty' <$<) >> $@
+        # known consumers of TERRABASE_UPSTREAM_*: none
 	@echo export TERRABASE_UPSTREAM_ENVIRONMENT_TF_JSON="$(UPSTREAM_ENVIRONMENT_TF_JSON)" >> $@
 	@echo export TERRABASE_UPSTREAM_ROOT_PREFIX="$(UPSTREAM_ROOT_PREFIX)" >> $@
 
