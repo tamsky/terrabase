@@ -1,12 +1,23 @@
 #cloud-config
 
-package_update: false
+# Update apt database on first boot (ie. run 'apt-get update'):
+package_update: true
+# Upgrade apt packages on first boot (ie. run 'apt-get upgrade'):
 package_upgrade: false
 
 # trust me:
 migrate: false
 
 ${MAYBE_SOME_FQDN_CLOUD_CONFIG_YAML}
+
+# our OS-agnostic consul start/stop script:
+write_files:
+- path: /etc/init.d/consul
+  owner: root:root
+  permissions: "0755"
+  encoding: b64
+  content: ${etc_init_dot_d_consul_b64}
+  
 
 ntp:
   pools:

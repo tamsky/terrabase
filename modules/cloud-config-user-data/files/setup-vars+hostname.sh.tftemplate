@@ -13,30 +13,6 @@
 
 set -x
 
-###### Early boot actions
-
-# This task should move to packer-base image:
-# Creating the directory before boot allows journald to persist logs.
-# Creating the directory after binary starts does not.
-# Restart journald now so we persist logs:
-mkdir -v /var/log/journal &&
-     [[ $(type systemctl) ]] &&
-     systemctl restart systemd-journald.service
-
-# Uncomment if cloud-init modifies /etc/rsyslog.conf
-# service rsyslog restart
-
-# Fix DNS:
-# Ubuntu needs this:
-# http://serverfault.com/questions/737375
-[[ -f /etc/resolvconf/update.d/libc ]] && {
-    cat >/etc/default/resolvconf <<EOF
-TRUNCATE_NAMESERVER_LIST_AFTER_LOOPBACK_ADDRESS=n
-EOF
-    resolvconf -u ;
-}
-
-
 ###### Begin Hostname config:
 
 APP="${name}"

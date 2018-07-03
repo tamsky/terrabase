@@ -7,8 +7,8 @@ type -p apt-get && APT_GET=true
 type -p yum && YUM=true
 TRY=0
 while [[ $TRY -lt 5 ]] ; do
-   [[ APT_GET ]] && apt-get install -y $REQUIRED_PACKAGES && break
-   [[ YUM ]] && yum install -y $REQUIRED_PACKAGES && break
+   [[ $APT_GET ]] && apt-get install -y $REQUIRED_PACKAGES && break
+   [[ $YUM ]] && yum install -y $REQUIRED_PACKAGES && break
    TRY=$(($TRY + 1))
 done
 

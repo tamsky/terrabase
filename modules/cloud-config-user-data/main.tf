@@ -28,9 +28,9 @@ variable "slack_hook_url" { default = "" }
 # user data #
 #############
 
-## Static Files
+## Static file
 # data "template_file" "etc-initd-consul" {
-#     template = "${file("${path.module}/files/etc-init.d-consul.tftemplate")}"
+#    template = "${file("${path.module}/files/etc-init.d-consul.sh")}"
 # }
 
 data "template_file" "install-consul" {
@@ -53,6 +53,11 @@ data "template_file" "linux-common" {
     }
 }
 
+# static file:
+data "template_file" "early-boot-actions" {
+    template = "${file("${path.module}/files/early-boot-actions.sh")}"
+}
+
 data "template_file" "windows-common" {
     template = "${file("${path.module}/files/setup-vars+hostname.ps1.tftemplate")}"
     vars {
@@ -68,8 +73,8 @@ data "template_file" "cloud-config" {
     vars {
         name = "${var.name}"
         environment = "${var.environment}"
-        # Imports a raw file into a template var:
-        rsyslog_b64 = "${base64encode(file("${path.module}/files/rsyslog.conf"))}"
+        # Imports the raw file into a template var:
+        etc_init_dot_d_consul_b64 = "${base64encode(file("${path.module}/files/etc-init.d-consul.sh"))}"
         MAYBE_MORE_CLOUD_CONFIG_USERS = "${ (var.additional_users_yml == "") ? "" : var.additional_users_yml}"
         MAYBE_SOME_FQDN_CLOUD_CONFIG_YAML = "${ (var.fqdn == "") ? "
 
@@ -103,8 +108,8 @@ data "template_cloudinit_config" "linux" {
     }
     part {
         content_type = "text/x-shellscript"
-        content      = "${data.template_file.linux-common.rendered}"
-        filename     = "00-setup-vars+hostname.sh"
+        content      = "${data.template_file.early-boot-actions.rendered}"
+        filename     = "00-early-boot-actions.sh"
     }
     part {
         content_type = "text/x-shellscript"
@@ -113,8 +118,13 @@ data "template_cloudinit_config" "linux" {
     }
     part {
         content_type = "text/x-shellscript"
+        content      = "${data.template_file.linux-common.rendered}"
+        filename     = "02-setup-vars+hostname.sh"
+    }
+    part {
+        content_type = "text/x-shellscript"
         content      = "${data.template_file.install-consul.rendered}"
-        filename     = "02-install-consul.sh"
+        filename     = "05-install-consul.sh"
     }
 
     # conditional part
