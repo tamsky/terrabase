@@ -13,21 +13,21 @@ update get init: check ## Download and install modules for the configuration
 plan-local local-plan local-plan-save:
 	TERRABASE_LOCAL=local TF_LOG="$(TF_LOG)" ARGS="$(ARGS)" $(MAKE) plan 
 
-plan-nosave: check get ## Generate and show an execution plan
+plan-nosave: check ## Generate and show an execution plan
 	$(TF) plan $(ARGS)
 
-plan-save plan: check get ## Generate and show an execution plan, and save locally
+plan-save plan: check ## Generate and show an execution plan, and save locally
 	rm -f $$PWD/saved-plan
 	$(TF) plan -out=$$PWD/saved-plan $(ARGS)
 
-plan-deep: check get ## Generate and show a detailed execution plan, and save locally
+plan-deep: check ## Generate and show a detailed execution plan, and save locally
 	rm -f $$PWD/saved-plan
 	$(TF) plan -out=$$PWD/saved-plan -module-depth=-1 $(ARGS)
 
-plan-summary: check get ## Generate a summary output, do not save locally
+plan-summary: check ## Generate a summary output, do not save locally
 	$(TF) plan -no-color 2>&1 | grep --color=none -e '^[[:space:]]*[~+-].*' -e ^Plan -e '^Terraform will perform' -e '^Resource actions'
 
-plan-destroy: check get ## Generate and show a plan for DESTRUCTION, and save locally
+plan-destroy: check ## Generate and show a plan for DESTRUCTION, and save locally
 	rm -f $$PWD/saved-plan
 	$(TF) plan -destroy -out=$$PWD/saved-plan $(ARGS)
 
@@ -56,25 +56,25 @@ plan-detailed-exitcode: check ## Generate a plan and write $? to './.exitcode'
             [[ $$EXITCODE -eq 2 ]] && exit 0 ; \
             exit $$EXITCODE
 
-apply: check get ## Builds or changes infrastructure
+apply: check ## Builds or changes infrastructure
 	rm -f $$PWD/saved-plan
 	$(TF) plan -out=$$PWD/saved-plan $(ARGS)
 	$(TF) apply $(ARGS) $$PWD/saved-plan
 
-unsafe-apply: check get ## Builds or changes infrastructure
+unsafe-apply: check ## Builds or changes infrastructure
 	rm -f $$PWD/saved-plan
 	$(TF) apply $(ARGS)
 
 apply-saved-plan: check ## Builds or changes infrastructure based on saved plan, no 'get' required.
 	$(TF) apply $(ARGS) $$PWD/saved-plan && mv -f $$PWD/saved-plan $$PWD/saved-plan.applied
 
-destroy: check get ## Destroy Robinson family, DESTROY!!
+destroy: check ## Destroy Robinson family, DESTROY!!
 	rm -f $$PWD/saved-plan
 	$(TF) plan -destroy -out=$$PWD/saved-plan $(ARGS)
 	@echo -n "Hit ^C now to cancel, or press return TO DESTROY. ARE YOU SURE?" ; read something
 	$(TF) apply $$PWD/saved-plan
 
-unsafe-destroy: check get ## Destroy Robinson family, DESTROY!!
+unsafe-destroy: check ## Destroy Robinson family, DESTROY!!
 	rm -f $$PWD/saved-plan
 	$(TF) plan -destroy -out=$$PWD/saved-plan $(ARGS)
 	$(TF) apply $$PWD/saved-plan
