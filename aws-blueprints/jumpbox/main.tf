@@ -87,7 +87,7 @@ resource "aws_instance" "main" {
 resource "aws_route53_record" "per-instance" {
   provider = "aws.route53"
   count = "${var.instance_count}"
-  zone_id = "${lookup(data.terraform_remote_state.route53.environment_zone_map, var.environment, "MISSING")}"
+  zone_id = "${lookup(data.terraform_remote_state.route53.environment_zone_id_map, var.environment, "MISSING")}"
   name = "${count.index}.${var.role_name}.${lookup(data.terraform_remote_state.route53.environment_zone_name_map, var.environment, "MISSING")}"
   type = "A"
   ttl = "300"
@@ -98,7 +98,7 @@ resource "aws_route53_record" "per-instance" {
 // instance 0 gets a shorter name:
 resource "aws_route53_record" "main" {
   provider = "aws.route53"
-  zone_id = "${lookup(data.terraform_remote_state.route53.environment_zone_map, var.environment, "MISSING")}"
+  zone_id = "${lookup(data.terraform_remote_state.route53.environment_zone_id_map, var.environment, "MISSING")}"
   name = "${var.role_name}.${lookup(data.terraform_remote_state.route53.environment_zone_name_map, var.environment, "MISSING")}"
   type = "A"
   ttl = "300"

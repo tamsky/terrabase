@@ -2,8 +2,7 @@
 # MAP OUTPUTS
 #
 
-# todo: rename to environment_zone_id_map
-output "environment_zone_map" {
+output "environment_zone_id_map" {
     value = {
 #        dev       = "${aws_route53_zone.aws-dev.zone_id}"
         prod      = "${aws_route53_zone.aws-prod.zone_id}"
