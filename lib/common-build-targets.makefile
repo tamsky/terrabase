@@ -11,7 +11,7 @@ update get init: check ## Download and install modules for the configuration
 	KEEP_CACHE=false $(TF) init
 
 plan-local local-plan local-plan-save:
-	TERRABASE_LOCAL=local TF_LOG="$(TF_LOG)" ARGS="$(ARGS)" $(MAKE) plan 
+	USE_LOCAL_SOURCE=local TF_LOG="$(TF_LOG)" ARGS="$(ARGS)" $(MAKE) plan 
 
 plan-nosave: check ## Generate and show an execution plan
 	$(TF) plan $(ARGS)
@@ -92,6 +92,9 @@ show-plan: check ## Show current TF state
 
 show: check ## Show current TF state
 	$(TF) show $(ARGS)
+
+show-local: check ## Show current TF state
+	USE_LOCAL_SOURCE=local $(TF) show $(ARGS)
 
 taint: check ## Taints the one or more things listed in ARGS
 	$(TF) taint $(ARGS)
