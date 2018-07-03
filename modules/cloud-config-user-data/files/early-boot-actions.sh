@@ -15,18 +15,6 @@ mkdir -v /var/log/journal &&
 # Uncomment if cloud-init modifies /etc/rsyslog.conf
 # service rsyslog restart
 
-# Fix DNS:
-# Ubuntu needs this:
-# http://serverfault.com/questions/737375
-[[ -f /etc/resolvconf/update.d/libc ]] && {
-    cat >/etc/default/resolvconf <<EOF
-TRUNCATE_NAMESERVER_LIST_AFTER_LOOPBACK_ADDRESS=n
-EOF
-    resolvconf -u ;
-}
-
-apt-get update || true
-
 REQUIRED_PACKAGES="jq awscli"
 type -p apt-get && APT_GET=true
 type -p yum && YUM=true

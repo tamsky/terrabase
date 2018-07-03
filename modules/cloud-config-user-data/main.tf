@@ -107,6 +107,12 @@ data "template_cloudinit_config" "linux" {
         content      = "${data.template_file.cloud-config.rendered}"
     }
     part {
+        # boothooks run earliest during cloud-init boot, and run on every boot
+        # https://github.com/tamsky/cloud-init-example/blob/master/README.md#order-of-execution
+        content_type = "text/cloud-boothook"
+        content      = "${file("${path.module}/files/fix-ubuntu-loopback-dns.boothook.sh")}"
+    }
+    part {
         content_type = "text/x-shellscript"
         content      = "${data.template_file.early-boot-actions.rendered}"
         filename     = "00-early-boot-actions.sh"
@@ -136,7 +142,7 @@ data "template_cloudinit_config" "linux" {
 }
 
 data "template_cloudinit_config" "windows" {
-    gzip          = true   # enable if we go over the 16KB limit
+    gzip          = true   # help prevent going over the 16KB limit
     base64_encode = true
 
     part {
