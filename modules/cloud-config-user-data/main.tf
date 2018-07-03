@@ -49,7 +49,6 @@ data "template_file" "linux-common" {
         name = "${var.name}"
         environment = "${var.environment}"
         vpc_dns_zone_name = "${var.vpc_dns_zone_name}"
-        cloud_init_readonly_s3_bucket_name_prefix = "${var.cloud_init_readonly_s3_bucket_name_prefix}"
         slack_hook_url = "${var.slack_hook_url}"
     }
 }
@@ -60,7 +59,6 @@ data "template_file" "windows-common" {
         name = "${var.name}"
         environment = "${var.environment}"
         vpc_dns_zone_name = "${var.vpc_dns_zone_name}"
-#        public_dns_zone_name = "${var.public_dns_zone_name}"
         slack_hook_url = "${var.slack_hook_url}"
     }
 }

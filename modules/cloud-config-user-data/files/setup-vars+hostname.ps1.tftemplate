@@ -32,12 +32,6 @@ if ($HOSTNAME -gt 15) {
 }
 Rename-Computer -NewName $HOSTNAME
 
-# Set newrelic labels
-$LABELS='ENVIRONMENT:${environment};INSTANCE_REGION:' + $INSTANCE_REGION + ';APP:${name}'
-cmd.exe /c net stop nrsvrmon
-Set-ItemProperty -Path 'HKLM:\Software\New Relic\Server Monitor' -Name 'Labels' -Value $LABELS
-cmd.exe /c net start nrsvrmon
-
 # Disable winrm
 cmd.exe /c netsh advfirewall firewall set rule name="WinRM-HTTPS" new action=block
 cmd.exe /c net stop winrm
