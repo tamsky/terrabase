@@ -96,6 +96,12 @@ show: check ## Show current TF state
 show-local: check ## Show current TF state
 	USE_LOCAL_SOURCE=local $(TF) show $(ARGS)
 
+output: check ## Show output
+	$(TF) output $(ARGS)
+
+output-local: check ## Show output
+	USE_LOCAL_SOURCE=local $(TF) output $(ARGS)
+
 taint: check ## Taints the one or more things listed in ARGS
 	$(TF) taint $(ARGS)
 
