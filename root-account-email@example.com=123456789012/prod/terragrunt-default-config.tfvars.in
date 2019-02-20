@@ -2,7 +2,7 @@
 
 terraform {
     # Deploy from github repo, 'master' branch:
-    source = "git::git@github.com:openmail/terraform//aws-blueprints/${path_relative_to_include()}?ref=master"
+    source = "git::git@github.com:tamsky/terrabase//aws-blueprints/${path_relative_to_include()}?ref=master"
 
 }
 
