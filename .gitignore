@@ -1,6 +1,7 @@
 # ignore all per-directory state
 # state should always be stored in s3
 .terraform/*
+.terragrunt-cache/*
 
 # ignore local backups
 *.tfstate.backup
