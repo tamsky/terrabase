@@ -5,7 +5,7 @@
 
 credentials-checks: environment.sh
 	@source environment.sh ; \
-	    [[ -z $${AWS_DEFAULT_REGION} ]] || { echo AWS_DEFAULT_REGION environment variable MUST NOT BE SET - It overrides values in variables.tf, which can be bad.; exit 1; } ; \
+	    # [[ -z $${AWS_DEFAULT_REGION} ]] || { echo AWS_DEFAULT_REGION environment variable MUST NOT BE SET - It overrides values in variables.tf, which can be bad.; exit 1; } ;
 	    [[ $${USING_IAM_INSTANCE_PROFILE} ]] && exit 0 ; \
 	    makefile_check_credential_profile_name=$$(jq -r '.["variable"]["aws_provider_profile_name"]["default"] // .["provider"][0]["aws"]["profile"]' < environment.tf.json) ; \
 	    [[ $$(aws configure get aws_access_key_id --profile $$makefile_check_credential_profile_name) ]] || { echo AWS_ACCESS_KEY_ID credential unavailable from ~/.aws/credentials:[$$makefile_check_credential_profile_name] profile.; exit 1; } ; \
