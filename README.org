@@ -2,6 +2,62 @@
 
 ./tf (helper script wrapper for 'terraform')
 
+Per-account directory layout:
+
 root-account-email@example.com=123456789012/
 - account-specific resources are placed within an AWS account directory.
-- directory names the root account email and the 12-digit AWS account number.
+- directory names the root account email + "=" + 12-digit AWS account number.
+- Per-account directories track both the account # and the root email address, 
+  because, when combined, it provides a unique identifier for an AWS account.
+  (AWS does not enforce a global uniqueness requirement on the root account's email addresses.)
+
+
+example/test usage of this layout:
+
+```
+# cd terrabase/root-account-email@example.com=123456789012/prod/core
+# make plan
+[ plan output ]
+# make apply-saved-plan
+[ apply output ]
+```
+
+Examining `//root-account-email@example.com=123456789012/prod/core`, we can see there are very few unique files:
+```
+# ls -l root-account-email@example.com=123456789012/prod/core
+
+lrwxr-xr-x  1 user  group   11 Jun 10  2018 Makefile@ -> ../Makefile
+lrwxr-xr-x  1 user  group   22 Apr 10 01:54 environment.tf.json@ -> ../environment.tf.json
+lrwxr-xr-x  1 user  group   39 Apr 10 01:54 global-global-remote-state.tf@ -> ../../global/global/lib/remote-state.tf
+lrwxr-xr-x  1 user  group   36 Apr 10 01:54 global-iam-remote-state.tf@ -> ../../global/iam/lib/remote-state.tf
+lrwxr-xr-x  1 user  group   40 Apr 10 01:54 global-route53-remote-state.tf@ -> ../../global/route53/lib/remote-state.tf
+drwxr-xr-x  6 user  group  192 Apr 10 01:54 key_pairs/
+lrwxr-xr-x  1 user  group   18 Jun 10  2018 requirements.tf@ -> ../requirements.tf
+-rw-r--r--  1 user  group  184 Apr 10 01:54 terraform.tfvars
+```
+
+All state is derived from:
+```
+# cat terraform.tfvars 
+terragrunt = {
+    include = {
+        path = "../terragrunt-${get_env("USE_LOCAL_SOURCE","default")}-config.tfvars"
+    }
+    dependencies = {
+        paths = [ "key_pairs" ]
+    }
+}
+```
+
+Which includes the terragrunt file via `../terragrunt-default-config.tfvars`:
+```
+terraform {
+    # Deploy from github repo, 'master' branch:
+    source = "git::git@github.com:tamsky/terrabase//aws-blueprints/${path_relative_to_include()}?ref=master"
+
+}
+```
+
+Which imports all files in `//terrabase/aws-blueprints/core`.
+
+This description is meant as an introduction, not complete documentation of this framework.
