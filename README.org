@@ -14,16 +14,17 @@ root-account-email@example.com=123456789012/
 
 example/test usage of this layout:
 
-```
+#+BEGIN_EXAMPLE
 # cd terrabase/root-account-email@example.com=123456789012/prod/core
 # make plan
 [ plan output ]
 # make apply-saved-plan
 [ apply output ]
-```
+#+END_EXAMPLE
 
 Examining `//root-account-email@example.com=123456789012/prod/core`, we can see there are very few unique files:
-```
+
+#+BEGIN_EXAMPLE
 # ls -l root-account-email@example.com=123456789012/prod/core
 
 lrwxr-xr-x  1 user  group   11 Jun 10  2018 Makefile@ -> ../Makefile
@@ -34,10 +35,10 @@ lrwxr-xr-x  1 user  group   40 Apr 10 01:54 global-route53-remote-state.tf@ -> .
 drwxr-xr-x  6 user  group  192 Apr 10 01:54 key_pairs/
 lrwxr-xr-x  1 user  group   18 Jun 10  2018 requirements.tf@ -> ../requirements.tf
 -rw-r--r--  1 user  group  184 Apr 10 01:54 terraform.tfvars
-```
+#+END_EXAMPLE
 
 All state is derived from:
-```
+#+BEGIN_EXAMPLE
 # cat terraform.tfvars 
 terragrunt = {
     include = {
@@ -47,16 +48,17 @@ terragrunt = {
         paths = [ "key_pairs" ]
     }
 }
-```
+#+END_EXAMPLE
 
 Which includes the terragrunt file via `../terragrunt-default-config.tfvars`:
-```
+#+BEGIN_EXAMPLE
 terraform {
     # Deploy from github repo, 'master' branch:
     source = "git::git@github.com:tamsky/terrabase//aws-blueprints/${path_relative_to_include()}?ref=master"
 
 }
-```
+#+END_EXAMPLE
+
 
 Which imports all files in `//terrabase/aws-blueprints/core`.
 
