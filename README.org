@@ -1,15 +1,15 @@
-# Quick overview
+** Quick overview
 
 Per-account directory layout:
 
-root-account-email@example.com=123456789012/
+=root-account-email@example.com=123456789012/=:
 - account-specific resources are placed within an AWS account directory.
-- directory names the root account email + "=" + 12-digit AWS account number.
+- directory's name is the root account email + "=" + 12-digit AWS account number.
 - Per-account directories track both the account # and the root email address, 
   because, when combined, it provides a unique identifier for an AWS account.
   (AWS does not enforce a global uniqueness requirement on the root account's email addresses.)
 
-# Example/test usage of this repository and layout:
+*** Example/test usage of this repository and layout:
 
 #+BEGIN_EXAMPLE
 # cd terrabase/root-account-email@example.com=123456789012/prod/core
@@ -59,8 +59,7 @@ terraform {
 
 Which imports all files in =//terrabase/aws-blueprints/core=.
 
-## Helpers
-
+** Helpers
 - ./tf (helper script wrapper for 'terraform')
 - ./lib (Makefile library files used by all environments)
 
