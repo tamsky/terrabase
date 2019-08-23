@@ -22,7 +22,7 @@ example/test usage of this layout:
 [ apply output ]
 #+END_EXAMPLE
 
-Examining `//root-account-email@example.com=123456789012/prod/core`, we can see there are very few unique files:
+Examining =//root-account-email@example.com=123456789012/prod/core=, we can see there are very few unique files:
 
 #+BEGIN_EXAMPLE
 # ls -l root-account-email@example.com=123456789012/prod/core
@@ -50,7 +50,7 @@ terragrunt = {
 }
 #+END_EXAMPLE
 
-Which includes the terragrunt file via `../terragrunt-default-config.tfvars`:
+Which includes the terragrunt file via =../terragrunt-default-config.tfvars=:
 #+BEGIN_EXAMPLE
 terraform {
     # Deploy from github repo, 'master' branch:
@@ -60,6 +60,6 @@ terraform {
 #+END_EXAMPLE
 
 
-Which imports all files in `//terrabase/aws-blueprints/core`.
+Which imports all files in =//terrabase/aws-blueprints/core=.
 
 This description is meant as an introduction, not complete documentation of this framework.
