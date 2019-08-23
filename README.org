@@ -1,7 +1,5 @@
 # Quick overview
 
-./tf (helper script wrapper for 'terraform')
-
 Per-account directory layout:
 
 root-account-email@example.com=123456789012/
@@ -11,8 +9,7 @@ root-account-email@example.com=123456789012/
   because, when combined, it provides a unique identifier for an AWS account.
   (AWS does not enforce a global uniqueness requirement on the root account's email addresses.)
 
-
-example/test usage of this layout:
+# Example/test usage of this repository and layout:
 
 #+BEGIN_EXAMPLE
 # cd terrabase/root-account-email@example.com=123456789012/prod/core
@@ -62,4 +59,9 @@ terraform {
 
 Which imports all files in =//terrabase/aws-blueprints/core=.
 
-This description is meant as an introduction, not complete documentation of this framework.
+## Helpers
+
+- ./tf (helper script wrapper for 'terraform')
+- ./lib (Makefile library files used by all environments)
+
+This README is meant as an introduction, not complete documentation of this framework.
